@@ -13,10 +13,7 @@ import time
 import requests as request
 from urllib.parse import urlparse, parse_qs, urlunparse
 import requests
-import tgcrypto
 import re
-import aiohttp
-
 from unshortenit import UnshortenIt
 # from selenium.webdriver.common.by import By
 from unshortenit import UnshortenIt
@@ -189,6 +186,35 @@ async def get_product_details(url):
         price_element=' '
     return amazon_product_name, img_url, price_element
 
+def add_banner(image, text):
+    width, height = image.size
+    banner_height = 50  # Height of the banner
+
+    # Create a new image with extra space at the top for the banner
+    new_image = Image.new('RGB', (width, height + banner_height), color='white')
+    new_image.paste(image, (0, banner_height))
+
+    # Add text to the banner with a yellow background
+    draw = ImageDraw.Draw(new_image)
+    font = ImageFont.truetype("arial.ttf", 24)  # Larger font size
+    text_position = (10, 10)
+
+    # Calculate text bounding box
+    text_bbox = draw.textbbox(text_position, text, font=font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+
+    # Draw yellow rectangle background
+    draw.rectangle([(text_position[0] - 5, text_position[1] - 5),
+                    (text_position[0] + text_width + 5, text_position[1] + text_height + 5)],
+                   fill="yellow")
+
+    # Draw text on top
+    draw.text(text_position, text, fill="blue", font=font)
+
+    return new_image
+
+
 async def merge_images(image_urls):
     images = []
     headers = {
@@ -249,6 +275,7 @@ async def merge_images(image_urls):
 
         text_position = (combined_image.width - 210, combined_image.height - 60)
         draw.text(text_position, '@Amazon_PriceHistory_Bot', fill="blue", font=font)
+        combined_image = add_banner(combined_image, "Search @price_history_loots and Join")
 
         return  combined_image
     # Display or save the combined image
