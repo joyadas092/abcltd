@@ -275,7 +275,7 @@ async def merge_images(image_urls):
 
         text_position = (combined_image.width - 210, combined_image.height - 60)
         draw.text(text_position, '@Amazon_PriceHistory_Bot', fill="blue", font=font)
-        combined_image = add_banner(combined_image, "Search @price_history_loots and Join")
+        # combined_image = add_banner(combined_image, "Search @price_history_loots and Join")
 
         return  combined_image
     # Display or save the combined image
