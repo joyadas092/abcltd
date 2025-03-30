@@ -113,8 +113,8 @@ https://t.me/addlist/FReIeSd3Hyg5NjJl
 '''
 
 Promo = InlineKeyboardMarkup(
-     [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),InlineKeyboardButton("🤖 PriceTracker Bot", url="https://t.me/The_PriceTracker_Bot")],
-      [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),InlineKeyboardButton("🔔 Whatsapp 💬", url="https://t.me/Deals_and_Discounts_Channel2/33")]
+     [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),InlineKeyboardButton("🔔 PriceTracker Bot", url="https://t.me/The_PriceTracker_Bot")],
+      [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),InlineKeyboardButton("🛍️ WishList Bot", url="https://t.me/the_wishlist_robot")]
       ])
 Promo2 = InlineKeyboardMarkup(
      [[InlineKeyboardButton("MAXIMUM DEALS 🛒", url="https://t.me/addlist/6R2xTLIL9JFkMWI1")],
