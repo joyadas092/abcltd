@@ -148,7 +148,7 @@ async def callback_query(app,CallbackQuery):
         #     await a.download(file_name=temp_file.name)
         #     with open(temp_file.name, 'rb') as f:
         #         photo_bytes = BytesIO(f.read())
-        await app.send_photo(chat_id=Target_Channel_id,caption=a.caption +  "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",photo=a.photo.file_id,reply_markup=Promo)
+        await app.send_photo(chat_id=Target_Channel_id,caption_entities=a.caption_entities,caption=a.caption,photo=a.photo.file_id,reply_markup=Promo)
                              # photo=image_bytes,caption=f"<b>{inputvalue.replace(extracted_link, affiliate_url)}</b>",
                              # reply_markup=Promo)
         await CallbackQuery.answer(text='Sent to Channel✨', show_alert=True)
@@ -306,12 +306,13 @@ async def handle_text(app, message):
                 # print(forward)
                 if forward == True:
                     await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-                                         caption=f"<b>{inputvalue.replace(extracted_link, affiliate_url)}</b>"+ "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",
+                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+ "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",
                                          reply_markup=Promo)
-                await app.send_photo(message.chat.id, photo=image_bytes,
-                                     caption=f"<b>{inputvalue.replace(extracted_link,affiliate_url)}</b>",
-                                     reply_markup=InlineKeyboardMarkup(
-                                                    [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
+                else:
+                    await app.send_photo(message.chat.id, photo=image_bytes,
+                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+"\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",
+                                         reply_markup=InlineKeyboardMarkup(
+                                             [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
 
 
             # print('success')
