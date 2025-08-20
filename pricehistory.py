@@ -113,7 +113,7 @@ Goibibo ✈️:   @GOIBIBO_Mini_bot
 
 👉 AJIO & MYNTRA : @Ajio_myntra_deals
 
-👉 SHOPSY & MEESHO : @shopsy_meesho_Deals
+👉 SHOPSY & MEESHO : @shopsymeesho
 
 👉 Offers : @OffersXpert
 
@@ -124,8 +124,8 @@ https://t.me/addlist/FReIeSd3Hyg5NjJl
 '''
 
 Promo = InlineKeyboardMarkup(
-     [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),InlineKeyboardButton("🔔 PriceTracker Bot", url="https://t.me/The_PriceTracker_Bot")],
-      [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),InlineKeyboardButton("🛍️ Join WhatsApp", url="https://whatsapp.com/channel/0029VanELRF9WtC8Cqoeaj1f")]
+     [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),InlineKeyboardButton("🛍️ ProductsFinder Bot", url="https://t.me/ProductsFinder_Bot")],
+      [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),InlineKeyboardButton("🔔 PriceTracker Bot", url="https://t.me/The_PriceTracker_Bot")]
       ])
 Promo2 = InlineKeyboardMarkup(
      [[InlineKeyboardButton("MAXIMUM DEALS 🛒", url="https://t.me/addlist/6R2xTLIL9JFkMWI1")],
@@ -317,11 +317,11 @@ async def handle_text(app, message):
                 # print(forward)
                 if forward == True:
                     await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+ "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",
+                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+ "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a></b>",
                                          reply_markup=Promo)
                 else:
                     await app.send_photo(message.chat.id, photo=image_bytes,
-                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+"\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a>\n\n<i>Source ↪️: @PriceGraph</i></b>",
+                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+"\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a></b>",
                                          reply_markup=InlineKeyboardMarkup(
                                              [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
 
@@ -367,3 +367,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(bot.run_task(host='0.0.0.0', port=8000))
     loop.run_forever()
+
