@@ -318,7 +318,7 @@ async def handle_text(app, message):
                 if forward == True:
                     await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
                                          caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+ "\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a></b>",
-                                         reply_markup=Promo)
+                                         reply_markup=Promo,disable_notification=True)
                 else:
                     await app.send_photo(message.chat.id, photo=image_bytes,
                                          caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"+"\n\n<b><a href ='https://t.me/addlist/6R2xTLIL9JFkMWI1'>🛍️Click To Join for More Loots 👈</a></b>",
@@ -367,4 +367,5 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(bot.run_task(host='0.0.0.0', port=8000))
     loop.run_forever()
+
 
