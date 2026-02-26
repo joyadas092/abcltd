@@ -108,7 +108,7 @@ Goibibo ✈️:   @GOIBIBO_Mini_bot
 
 👉 AMAZON : @amazon_loots_daily
 
-👉 FLIPKART : @fkrt_deals
+👉 FLIPKART : @fkrt_deals_only
 
 👉 AJIO & MYNTRA : @Ajio_myntra_deals
 
@@ -207,7 +207,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','')..replace('• Sent via TeleFeed','')strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -223,7 +223,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','')strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -340,7 +340,7 @@ async def handle_text(app, message):
         user_info = f"User ID: {message.from_user.id}\nUsername: @{message.from_user.username}\nUser Input: {message.text}"
         error_message = f"Error: {str(e)}\n\nUser Info:\n{user_info}"
         contact_admin_button = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Contact Admin", url="https://t.me/imovies_contact_bot", )]])
+            [[InlineKeyboardButton("Contact Admin", url="https://t.me/deals_hub_bot", )]])
         b = await app.send_message(admin_chat_id, error_message)
         user_error_message = f"Oops! Something went Wrong.\n👉Input Only Amazon Product Link..\n\n👉Don't send Post with Multiple Links..\nTry Again.Reported to the admin."
         b = await app.send_message(message.chat.id, user_error_message, reply_markup=contact_admin_button)
@@ -375,6 +375,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(bot.run_task(host='0.0.0.0', port=8000))
     loop.run_forever()
+
 
 
 
