@@ -207,7 +207,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','')..replace('• Sent via TeleFeed','')strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','').strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -223,7 +223,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','')strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','').strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -375,6 +375,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(bot.run_task(host='0.0.0.0', port=8000))
     loop.run_forever()
+
 
 
 
