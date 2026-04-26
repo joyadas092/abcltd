@@ -190,7 +190,7 @@ async def handle_text(app, message):
         await message.reply("🚫 You are banned from using this bot.")
         return
     Join = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Join Channel", url="https://t.me/+fzkzAoDc2k4xZjNl")]])
+        [[InlineKeyboardButton("Join Channel", url="https://t.me/+nHzi25ZLNlE4MjJl")]])
 
     if AUTH_CHANNEL and not await is_subscribed(app, message):
         await app.send_message(message.chat.id,
