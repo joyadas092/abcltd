@@ -183,6 +183,7 @@ async def get_product_details(url):
     amazon_product_name= SearchProduct.item_info.title.display_value
     img_url=SearchProduct.images.primary.large.url
     if SearchProduct.offers:
+        # print(SearchProduct.offers)
         price_element=str(SearchProduct.offers.listings[0].price.display_amount)
     else:
         price_element=' '

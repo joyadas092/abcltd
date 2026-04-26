@@ -10,7 +10,7 @@ from quart import Quart
 from functions import *
 import os
 from dotenv import load_dotenv
-
+from ban_manager import is_banned
 load_dotenv()
 
 api_id = int(os.getenv("API_ID"))
@@ -19,7 +19,7 @@ bot_token = os.getenv("BOT_TOKEN")
 
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 admin_chat_id = '849188964'
-AUTH_CHANNEL = '-1002038980148'
+AUTH_CHANNEL = '-1003849048564'
 DealerID = ['5886397642', '-1002060929372', '-4247871412']
 Target_Channel_id = '-1002038980148'
 # Define a handler for the /start command
@@ -108,7 +108,7 @@ Goibibo ✈️:   @GOIBIBO_Mini_bot
 
 👉 AMAZON : @amazon_loots_daily
 
-👉 FLIPKART : @fkrt_deals_only
+👉 FLIPKART : @fkrt_deals
 
 👉 AJIO & MYNTRA : @Ajio_myntra_deals
 
@@ -183,7 +183,12 @@ async def start(app, message):
 async def handle_text(app, message):
     bot_info = await app.get_me()
     bot_username = bot_info.username
+    user_id = message.from_user.id
 
+    # 🚫 BAN CHECK (FIRST LINE)
+    if is_banned(user_id):
+        await message.reply("🚫 You are banned from using this bot.")
+        return
     Join = InlineKeyboardMarkup(
         [[InlineKeyboardButton("Join Channel", url="https://t.me/+fzkzAoDc2k4xZjNl")]])
 
@@ -207,7 +212,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','').strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -223,7 +228,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','').strip()
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP')
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
@@ -234,7 +239,7 @@ async def handle_text(app, message):
         await app.send_message(message.chat.id, f"Something went wrong: {str(e)}")
     # a = await app.send_message(message.chat.id, "Just wait 5 Seconds⏳⏳....Bot is Working🤖>>>>")
     try:
-        if 'LivegramBot' in inputvalue or 'You cannot forward someone' in inputvalue:
+        if 'LivegramBot' in inputvalue or 'You cannot forward someone' in inputvalue or user_id in DealerID:
             await message.delete()
             return None
         extracted_link = extract_link_from_text(inputvalue)
@@ -250,9 +255,11 @@ async def handle_text(app, message):
                 await message.delete()
                 e = await app.send_message(message.chat.id, "Searching Query in amazon.in...")
 
-                search_result = amazon.search_items(keywords=inputvalue, item_count=8)
-
+                search_result = amazon.search_items(keywords=inputvalue, item_count=6)
+                # print(search_result)
                 for item in search_result.items:
+                    print(item)
+
                     response = requests.get(item.images.primary.large.url)
                     # print('gg')
                     if response.status_code == 200:
@@ -262,13 +269,16 @@ async def handle_text(app, message):
                         image_bytes.seek(0)
 
                     await app.send_photo(chat_id=message.chat.id, photo=image_bytes,
-                                         caption=f"{item.item_info.title.display_value}\n\n Currrent Price : {item.offers.listings[0].price.amount}",
+                                         caption=f"{item.item_info.title.display_value}\n\n Currrent Price : "
+                                                 # f"{item.offers.listings[0].price.amount}",
+                                                ,
                                          reply_markup=InlineKeyboardMarkup(
                                              [[InlineKeyboardButton("BUY NOW", url=f'{item.detail_page_url}')],
                                               [InlineKeyboardButton("CLICK to See Price History 📉",
                                                                     url=f'https://t.me/{bot_username}?start={item.asin}')]
                                               ]))
                     await e.delete()
+
 
             return None
 
@@ -340,7 +350,7 @@ async def handle_text(app, message):
         user_info = f"User ID: {message.from_user.id}\nUsername: @{message.from_user.username}\nUser Input: {message.text}"
         error_message = f"Error: {str(e)}\n\nUser Info:\n{user_info}"
         contact_admin_button = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("Contact Admin", url="https://t.me/deals_hub_bot", )]])
+            [[InlineKeyboardButton("Contact Admin", url="https://t.me/imovies_contact_bot", )]])
         b = await app.send_message(admin_chat_id, error_message)
         user_error_message = f"Oops! Something went Wrong.\n👉Input Only Amazon Product Link..\n\n👉Don't send Post with Multiple Links..\nTry Again.Reported to the admin."
         b = await app.send_message(message.chat.id, user_error_message, reply_markup=contact_admin_button)
@@ -375,9 +385,6 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.create_task(bot.run_task(host='0.0.0.0', port=8000))
     loop.run_forever()
-
-
-
 
 
 
