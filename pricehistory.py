@@ -228,7 +228,7 @@ async def handle_text(app, message):
                         hyperlinkurl.append(entity.url)
                 pattern = re.compile(r'Buy Now')
 
-                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP')
+                inputvalue = pattern.sub(lambda x: hyperlinkurl.pop(0), inputvalue).replace('Regular Price', 'MRP').replace('- Sent via TeleFeed','').replace('• Sent via TeleFeed','').strip()
                 if "😱 Deal Time" in inputvalue:
                     # Remove the part
                     inputvalue = inputvalue.split("😱 Deal Time")[0]
