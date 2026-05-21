@@ -365,16 +365,12 @@ async def handle_text(app, message):
 @bot.before_serving
 async def before_serving():
     await app.start()
-    # await app.send_message(chat_id=Target_Channel_id,
-    #                      text='<b>@AMAZON_PRICEHISTORY_BOT RESTARTED</b>',
-    #                      )
+    await app.send_message(chat_id= 5886397642, text='Bot starting')
 
 
 @bot.after_serving
 async def after_serving():
-    # await app.send_message(chat_id=Target_Channel_id,
-    #                      text='<b>@AMAZON_PRICEHISTORY_BOT WILL BE RESTARTED SHORTLY</b>',
-    #                      )
+    await app.send_message(chat_id= 5886397642, text='Bot Stopping')
     await app.stop()
 
 
