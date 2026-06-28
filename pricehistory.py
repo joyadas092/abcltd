@@ -59,15 +59,18 @@ async def start(app, message):
 
         keepa_url, amazon_url, affiliate_url = keepa_process(url)
 
-        seed = message.from_user.id
         combined_image = await merge_images([imageUrl, keepa_url])
-        image_bytes = BytesIO()
-        combined_image.save(image_bytes, format='JPEG')
-        image_bytes.seek(0)
-
-        await app.send_photo(message.chat.id, photo=image_bytes,
-                             caption=f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\nBEST BUY LINK: <b>{affiliate_url}</b>\n\nfrom <b>@PriceGraph </b>",
-                             reply_markup=Promo2)
+        if combined_image:
+            image_bytes = BytesIO()
+            combined_image.save(image_bytes, format='JPEG')
+            image_bytes.seek(0)
+            await app.send_photo(message.chat.id, photo=image_bytes,
+                                 caption=f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\nBEST BUY LINK: <b>{affiliate_url}</b>\n\nfrom <b>@PriceGraph </b>",
+                                 reply_markup=Promo2)
+        else:
+            await app.send_message(message.chat.id,
+                                   f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\nBEST BUY LINK: <b>{affiliate_url}</b>\n\nfrom <b>@PriceGraph </b>",
+                                   reply_markup=Promo2)
 
     else:
         await app.send_chat_action(message.chat.id, ChatAction.TYPING)
@@ -83,44 +86,6 @@ async def start(app, message):
     #     await message.reply(
     #         "Hey! Just send me a valid Amazon product link. I will share you the Price History Graph of last 3 months😍😍\n\nBuy when the Price is Low📉")
 
-
-miniapps = ''' 
-🚨🚨 Use Telegram Mini Apps and Free your Device Storage
-
-Amazon 🛒 :   @amazon_india_mini_bot
-
-Flipkart 🛍️:    @FLIPKART_Mini_bot
-
-Ajio 👗:           @AJIO_Mini_bot
-
-Myntra 👕 :    @MYNTRA_Mini_bot
-
-Shopsy 🏠:    @SHOPSY_Mini_bot
-
-Cleartrip ✈️ :  @CLEARTRIP_Mini_bot
-
-Goibibo ✈️:   @GOIBIBO_Mini_bot
-
-
-⚠️⚠️Join Individual Channel according to your Favourite Buying Website.😍😍
-
-👉 PRICE HISTORY : @PriceGraph
-
-👉 AMAZON : @amazon_loots_daily
-
-👉 FLIPKART : @fkrt_deals
-
-👉 AJIO & MYNTRA : @Ajio_myntra_deals
-
-👉 SHOPSY & MEESHO : @shopsymeesho
-
-👉 Offers : @OffersXpert
-
-
-Join All Add Folder 👇: 
-
-https://t.me/addlist/FReIeSd3Hyg5NjJl
-'''
 
 Promo = InlineKeyboardMarkup(
     [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),
@@ -170,13 +135,6 @@ async def callback_query(app, CallbackQuery):
         # reply_markup=Promo)
         await CallbackQuery.answer(text='Sent to Channel✨', show_alert=True)
 
-
-@app.on_message(filters.command("miniapps") & (filters.private) & filters.incoming)
-async def start(app, message):
-    await app.send_message(
-        message.chat.id,
-        f"<b>{miniapps}</b>"
-    )
 
 
 @app.on_message((filters.private & filters.incoming) | (filters.group & filters.incoming))
@@ -255,7 +213,7 @@ async def handle_text(app, message):
                 await message.delete()
                 e = await app.send_message(message.chat.id, "Searching Query in amazon.in...")
 
-                search_result = amazon.search_items(keywords=inputvalue, item_count=6)
+                search_result = amazon_in.search_items(keywords=inputvalue, item_count=6)
                 # print(search_result)
                 for item in search_result.items:
                     print(item)
@@ -282,67 +240,65 @@ async def handle_text(app, message):
 
             return None
 
-        # ##################################
-        # if 'fkrt' in extracted_link or 'flipkart' in extracted_link:
-        #     if str(message.chat.id) in DealerID and forward==True:
-        #         if 'fkrt.co' in inputvalue:
-        #             inputvalue = extp(inputvalue)
-        #         affText= await ekconvert(inputvalue)
-        #         combined_image= await graphprocess(extracted_link)
-        #         image_bytes = BytesIO()
-        #         combined_image.save(image_bytes, format='JPEG')
-        #         image_bytes.seek(0)
-
-        #         # await app.send_photo(message.chat.id, photo=image_bytes, caption=inputvalue.replace(extracted_link,
-        #         #                                                                                     affiliateUrl) if affiliateUrl else inputvalue,
-        #         #                     reply_markup=Promo)
-        #         await app.send_photo(message.chat.id, photo=image_bytes, caption= affText,
-        #                              reply_markup=Promo)
-        #         if str(message.chat.id) in DealerID:
-        #             await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-        #                                  caption=f'{affText}</b>',
-        #                                  reply_markup=Promo)
-        #     else:
-        #         e=await app.send_message(message.chat.id,"Flipkart Price History can be used only by my Admin🥺")
-        #         await asyncio.sleep(5)
-        #         await e.delete()
-        #         await a.delete()
-        #         await message.delete()
-        #         return None
-
-        # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-        # print(extracted_link)
-
         clean_url = remove_amazon_affiliate_parameters(unshorten_url(extracted_link))
         # print('clean url: '+clean_url)
         if 'amazon' in clean_url:
-
+            country_code = extract_country_code(clean_url)
             product_name, imageUrl, Price = await get_product_details(clean_url)
 
             keepa_url, amazon_url, affiliate_url = keepa_process(clean_url)
 
-            seed = message.from_user.id
             combined_image = await merge_images([imageUrl, keepa_url])
-            image_bytes = BytesIO()
-            combined_image.save(image_bytes, format='JPEG')
-            image_bytes.seek(0)
+
+            if country_code == 'in':
+                caption = (
+                    f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\n"
+                    f"<b>You may get a CASHBACK!! Check Your Coupon Page Here👇👇 : \n\n"
+                    f"🔗 https://amzn.to/3WMJyqy \n\nYour Product Link 👇👇:\n\n"
+                    f"🔗{affiliate_url}\n\nfrom @PriceGraph </b>"
+                )
+            else:
+                caption = (
+                    f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\n"
+                    f"<b>Your Product Link 👇👇:\n\n"
+                    f"🔗{affiliate_url}\n\nfrom @PriceGraph </b>"
+                )
             await app.send_chat_action(message.chat.id, ChatAction.UPLOAD_PHOTO)
-            await app.send_photo(message.chat.id, photo=image_bytes,
-                                 caption=f"Product: {product_name}\n\nCurrent Price: <b>{Price}</b>\n\n<b>You may get a CASHBACK!! Check Your Coupon Page Here👇👇 : \n\n🔗 https://amzn.to/3WMJyqy \n\nYour Product Link 👇👇:\n\n🔗{affiliate_url}\n\nfrom @PriceGraph </b>",
-                                 reply_markup=Promo2)
-            # print(message.chat.id)
+            if combined_image:
+                image_bytes = BytesIO()
+                combined_image.save(image_bytes, format='JPEG')
+                image_bytes.seek(0)
+                await app.send_photo(message.chat.id, photo=image_bytes, caption=caption)
+            else:
+                await app.send_message(message.chat.id, caption)
+
             if str(message.chat.id) in DealerID:
-                # print(forward)
+                dealer_caption = (
+                    f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"
+                    "\n\n<b><a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>"
+                )
                 if forward == True:
-                    await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>" + "\n\n<b><a href ='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>",
-                                         reply_markup=Promo, disable_notification=True)
+                    if combined_image:
+                        image_bytes = BytesIO()
+                        combined_image.save(image_bytes, format='JPEG')
+                        image_bytes.seek(0)
+                        await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
+                                             caption=dealer_caption, reply_markup=Promo, disable_notification=True)
+                    else:
+                        await app.send_message(chat_id=Target_Channel_id, text=dealer_caption,
+                                               reply_markup=Promo, disable_notification=True)
                 else:
-                    await app.send_photo(message.chat.id, photo=image_bytes,
-                                         caption=f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>" + "\n\n<b><a href ='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>",
-                                         reply_markup=InlineKeyboardMarkup(
-                                             [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
+                    if combined_image:
+                        image_bytes = BytesIO()
+                        combined_image.save(image_bytes, format='JPEG')
+                        image_bytes.seek(0)
+                        await app.send_photo(message.chat.id, photo=image_bytes, caption=dealer_caption,
+                                             reply_markup=InlineKeyboardMarkup(
+                                                 [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
+                    else:
+                        await app.send_message(message.chat.id, dealer_caption,
+                                               reply_markup=InlineKeyboardMarkup(
+                                                   [[InlineKeyboardButton("Send to Channel", callback_data='Send')]]))
 
             # print('success')
     except Exception as e:
@@ -365,7 +321,15 @@ async def handle_text(app, message):
 @bot.before_serving
 async def before_serving():
     await app.start()
-    await app.send_message(chat_id= 5886397642, text='Bot starting')
+    # Pre-resolve all peers so Pyrogram caches them in the session.
+    # Without this, a fresh session file causes PeerIdInvalid on first use.
+    peers_to_resolve = [AUTH_CHANNEL, Target_Channel_id] + DealerID
+    for peer in peers_to_resolve:
+        try:
+            await app.get_chat(peer)
+        except Exception as e:
+            logger.warning(f"Could not resolve peer {peer}: {e}")
+    await app.send_message(chat_id=5886397642, text='Bot starting')
 
 
 @bot.after_serving
