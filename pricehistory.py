@@ -37,12 +37,21 @@ async def is_subscribed(bot, query):
     try:
         user = await bot.get_chat_member(AUTH_CHANNEL, query.from_user.id)
     except UserNotParticipant:
-        pass
+        return False
+    except PeerIdInvalid:
+        # AUTH_CHANNEL peer not cached yet (fresh/missing session) — resolve once and retry.
+        try:
+            await bot.get_chat(AUTH_CHANNEL)
+            user = await bot.get_chat_member(AUTH_CHANNEL, query.from_user.id)
+        except UserNotParticipant:
+            return False
+        except Exception as e:
+            logger.error(f"[is_subscribed] retry after PeerIdInvalid failed: {e}")
+            return False
     except Exception as e:
-        logger.exception(e)
-    else:
-        if user.status != 'kicked':
-            return True
+        logger.error(f"[is_subscribed] unexpected error: {e}")
+        return False
+    return user.status != enums.ChatMemberStatus.BANNED
 
 
 @app.on_message(filters.command("start") & (filters.group | filters.private) & filters.incoming)
