@@ -194,6 +194,15 @@ async def handle_text(app, message):
     Join = InlineKeyboardMarkup(
         [[InlineKeyboardButton("Join Channel", url="https://t.me/+nHzi25ZLNlE4MjJl")]])
 
+    # Ignore commands (promo, start, broadcast, stats, etc.) and non-product random text
+    raw_text = (message.text or message.caption or "").strip()
+    cmd_first = raw_text.split(maxsplit=1)[0].lower() if raw_text else ""
+    if cmd_first.startswith("/"):
+        return None
+    # Ignore very short / emoji-only / non-letter noise
+    if len(raw_text) < 2 or not any(ch.isalpha() for ch in raw_text):
+        return None
+
     if AUTH_CHANNEL and not await is_subscribed(app, message):
         await app.send_message(message.chat.id,
                                '<b>Join Telegram Channel to Use this Bot 👇👇\n\nJOIN AND TRY AGAIN</b>',
