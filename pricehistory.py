@@ -141,7 +141,7 @@ PROMO_FOOTER = "\n\n<b>🛍️ 👉 <a href='https://t.me/addlist/zzZb8Deuzy9kZj
 
 
 def promo_markup():
-    return PROMO_KEYBOARD if promo_enabled else Promo
+    return PROMO_KEYBOARD if promo_enabled else None
 
 
 def promo_footer():
@@ -170,30 +170,83 @@ async def forwardtochannel(app, message):
 
 @app.on_callback_query()
 async def callback_query(app, CallbackQuery):
-    global forward
+    global forward, promo_enabled, silent_interval
+    data = CallbackQuery.data or ""
+
+    if data in {"promo on", "promo off"} or data.startswith("silent "):
+        user_id = CallbackQuery.from_user.id if CallbackQuery.from_user else None
+        if user_id not in promo_admin_ids:
+            await CallbackQuery.answer("Not allowed", show_alert=True)
+            return
+
+        if data == "promo on":
+            promo_enabled = True
+            await CallbackQuery.edit_message_text("Promo ON ✅", reply_markup=promo_off_kb)
+            await CallbackQuery.answer("Promo ON")
+            return
+        if data == "promo off":
+            promo_enabled = False
+            await CallbackQuery.edit_message_text("Promo OFF 🚫", reply_markup=promo_on_kb)
+            await CallbackQuery.answer("Promo OFF")
+            return
+
+        try:
+            interval = int(data.split(maxsplit=1)[1])
+        except (IndexError, ValueError):
+            await CallbackQuery.answer("Invalid silent interval", show_alert=True)
+            return
+        if interval not in {2, 3, 5, 10}:
+            await CallbackQuery.answer("Invalid silent interval", show_alert=True)
+            return
+
+        silent_interval = interval
+        await CallbackQuery.edit_message_text(
+            f"Silent: notify every {silent_interval} posts."
+        )
+        await CallbackQuery.answer(f"Silent {silent_interval}")
+        return
+
     if await handle_cancel_callback(app, CallbackQuery):
         return
-    if CallbackQuery.data == 'forward off':
+    if data == 'forward off':
         await CallbackQuery.edit_message_text('Forward to Channel Status turned Off', reply_markup=forward_on)
         forward = False
-    elif CallbackQuery.data == 'forward on':
+    elif data == 'forward on':
         await CallbackQuery.edit_message_text('Forward to Channel Status turned On', reply_markup=forward_off)
         forward = True
-    elif CallbackQuery.data == 'Send':
+    elif data == 'Send':
         a = CallbackQuery.message
-        # with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        #     await a.download(file_name=temp_file.name)
-        #     with open(temp_file.name, 'rb') as f:
-        #         photo_bytes = BytesIO(f.read())
-        await app.send_photo(chat_id=Target_Channel_id, caption_entities=a.caption_entities, caption=a.caption,
-                             photo=a.photo.file_id, reply_markup=Promo)
-        # photo=image_bytes,caption=f"<b>{inputvalue.replace(extracted_link, affiliate_url)}</b>",
-        # reply_markup=Promo)
+        notify = should_notify(Target_Channel_id)
+        if a.photo:
+            await app.send_photo(
+                chat_id=Target_Channel_id,
+                photo=a.photo.file_id,
+                caption=a.caption,
+                caption_entities=a.caption_entities,
+                reply_markup=promo_markup(),
+                disable_notification=not notify,
+            )
+        else:
+            await app.send_message(
+                chat_id=Target_Channel_id,
+                text=a.text or "",
+                entities=a.entities,
+                reply_markup=promo_markup(),
+                disable_notification=not notify,
+            )
         await CallbackQuery.answer(text='Sent to Channel✨', show_alert=True)
 
 
 
-@app.on_message((filters.private & filters.incoming) | (filters.group & filters.incoming))
+non_command_filter = filters.create(
+    lambda _, __, message: not (message.text or message.caption or "").lstrip().startswith("/")
+)
+
+
+@app.on_message(
+    ((filters.private & filters.incoming) | (filters.group & filters.incoming))
+    & non_command_filter
+)
 async def handle_text(app, message):
     bot_info = await app.get_me()
     bot_username = bot_info.username
@@ -342,7 +395,6 @@ async def handle_text(app, message):
             if str(message.chat.id) in DealerID:
                 dealer_caption = (
                     f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"
-                    "\n\n<b><a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>"
                     + promo_footer()
                 )
                 notify = should_notify(Target_Channel_id)
@@ -402,52 +454,69 @@ async def stats_cmd(app, message):
 
 
 ################promo on off#################################################################
-promo_admin_ids = {5886397642} | {int(x.lstrip('-')) for x in DealerID if str(x).lstrip('-').isdigit()}
+OWNER_IDS = {
+    int(value.strip())
+    for value in (
+        os.getenv("OWNER_CHAT_ID", "") + "," + os.getenv("OWNER_CHAT_IDS", "")
+    ).split(",")
+    if value.strip().lstrip("-").isdigit()
+}
+promo_admin_ids = {5886397642} | OWNER_IDS
 
-def promo_filter_user(message):
-    return message.from_user and message.from_user.id in promo_admin_ids
 
-@app.on_message(filters.command('promo_on') & filters.incoming)
-async def promo_on(app, message):
-    if not promo_filter_user(message): return
+def is_promo_admin(message):
+    return message.from_user is not None and message.from_user.id in promo_admin_ids
+
+promo_on_kb = InlineKeyboardMarkup([[InlineKeyboardButton("ON ✅", callback_data='promo on')]])
+promo_off_kb = InlineKeyboardMarkup([[InlineKeyboardButton("OFF 🚫", callback_data='promo off')]])
+
+@app.on_message(filters.command('promo') & filters.incoming)
+async def promo_cmd(app, message):
     global promo_enabled
-    promo_enabled = True
-    await message.reply_text("✅ Promo ON — buttons + 'Click here to Join All Deals' added.")
-
-
-@app.on_message(filters.command('promo_off') & filters.incoming)
-async def promo_off(app, message):
-    if not promo_filter_user(message): return
-    global promo_enabled
-    promo_enabled = False
-    await message.reply_text("🚫 Promo OFF — buttons and join text removed.")
-
-
-@app.on_message(filters.command('promo_status') & filters.incoming)
-async def promo_status(app, message):
-    if not promo_filter_user(message): return
-    await message.reply_text(f"Promo is currently {'ON ✅' if promo_enabled else 'OFF 🚫'}")
-
-
-# Helper to allow both admin and poster IDs
-promo_admin_ids = {5886397642} | {int(x.lstrip('-')) for x in DealerID if str(x).lstrip('-').isdigit() or (str(x).lstrip('-') == '5886397642')}
-
-def promo_filter_user(message):
-    return message.from_user and message.from_user.id in promo_admin_ids
-
-@app.on_message(filters.regex(r"silent_") & filters.incoming)
-async def set_silent_interval(app, message):
-    from_user_id = message.from_user.id
-    allowed_ids = {5886397642} | {int(x) for x in DealerID if str(x).lstrip('-').isdigit()}
-    if from_user_id not in allowed_ids:
+    if not is_promo_admin(message):
+        await message.reply_text("Not allowed")
         return
+    if len(message.command) > 1:
+        option = message.command[1].lower()
+        if option == "on":
+            promo_enabled = True
+        elif option == "off":
+            promo_enabled = False
+        else:
+            await message.reply_text("Usage: /promo [on|off]")
+            return
+    await message.reply_text(
+        f"Promo currently: {'ON ✅' if promo_enabled else 'OFF 🚫'}\nToggle below:",
+        reply_markup=promo_on_kb if promo_enabled else promo_off_kb
+    )
+
+# Silent button command like /forward
+@app.on_message(filters.command('silent') & filters.incoming)
+async def silent_cmd(app, message):
     global silent_interval
-    try:
-        arg = (message.text or "").split("_")[1]
-        silent_interval = int(arg) if arg.isdigit() else 3
-        await message.reply_text(f"✅ Silent interval set: Every {silent_interval} post will notify.")
-    except Exception:
-        await message.reply_text("❌ Usage: /silent_2")
+    if not is_promo_admin(message):
+        await message.reply_text("Not allowed")
+        return
+    if len(message.command) > 1:
+        try:
+            interval = int(message.command[1])
+        except ValueError:
+            interval = 0
+        if interval not in {2, 3, 5, 10}:
+            await message.reply_text("Usage: /silent [2|3|5|10]")
+            return
+        silent_interval = interval
+        await message.reply_text(
+            f"Silent: notify every {silent_interval} posts."
+        )
+        return
+    kb = InlineKeyboardMarkup([
+        [InlineKeyboardButton("2 posts", callback_data='silent 2')],
+        [InlineKeyboardButton("3 posts (default)", callback_data='silent 3')],
+        [InlineKeyboardButton("5 posts", callback_data='silent 5')],
+        [InlineKeyboardButton("10 posts", callback_data='silent 10')],
+    ])
+    await message.reply_text(f"Silent interval: notify every {silent_interval} posts. Choose:", reply_markup=kb)
 
 
 # Run the bot
