@@ -145,6 +145,18 @@ def promo_markup():
 def promo_footer():
     return PROMO_FOOTER if promo_enabled else ""
 
+# =========================
+# 📌 Silent Control (like divideraff.py)
+# =========================
+silent_interval = 3
+post_counter = {}
+
+def should_notify(chat_id: int) -> bool:
+    if chat_id not in post_counter:
+        post_counter[chat_id] = 0
+    post_counter[chat_id] += 1
+    return post_counter[chat_id] % silent_interval == 0
+
 
 @app.on_message(filters.command('forward') & filters.user(5886397642))
 async def forwardtochannel(app, message):
@@ -331,16 +343,17 @@ async def handle_text(app, message):
                     "\n\n<b><a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>"
                     + promo_footer()
                 )
+                notify = should_notify(Target_Channel_id)
                 if forward == True:
                     if combined_image:
                         image_bytes = BytesIO()
                         combined_image.save(image_bytes, format='JPEG')
                         image_bytes.seek(0)
                         await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-                                             caption=dealer_caption, reply_markup=promo_markup(), disable_notification=True)
+                                             caption=dealer_caption, reply_markup=promo_markup(), disable_notification=not notify)
                     else:
                         await app.send_message(chat_id=Target_Channel_id, text=dealer_caption,
-                                               reply_markup=promo_markup(), disable_notification=True)
+                                               reply_markup=promo_markup(), disable_notification=not notify)
                 else:
                     if combined_image:
                         image_bytes = BytesIO()
@@ -387,23 +400,52 @@ async def stats_cmd(app, message):
 
 
 ################promo on off#################################################################
-@app.on_message(filters.command('promo_on') & filters.user(5886397642))
+promo_admin_ids = {5886397642} | {int(x.lstrip('-')) for x in DealerID if str(x).lstrip('-').isdigit()}
+
+def promo_filter_user(message):
+    return message.from_user and message.from_user.id in promo_admin_ids
+
+@app.on_message(filters.command('promo_on') & filters.incoming)
 async def promo_on(app, message):
+    if not promo_filter_user(message): return
     global promo_enabled
     promo_enabled = True
     await message.reply_text("✅ Promo ON — buttons + 'Click here to Join All Deals' added.")
 
 
-@app.on_message(filters.command('promo_off') & filters.user(5886397642))
+@app.on_message(filters.command('promo_off') & filters.incoming)
 async def promo_off(app, message):
+    if not promo_filter_user(message): return
     global promo_enabled
     promo_enabled = False
     await message.reply_text("🚫 Promo OFF — buttons and join text removed.")
 
 
-@app.on_message(filters.command('promo_status') & filters.user(5886397642))
+@app.on_message(filters.command('promo_status') & filters.incoming)
 async def promo_status(app, message):
+    if not promo_filter_user(message): return
     await message.reply_text(f"Promo is currently {'ON ✅' if promo_enabled else 'OFF 🚫'}")
+
+
+# Helper to allow both admin and poster IDs
+promo_admin_ids = {5886397642} | {int(x.lstrip('-')) for x in DealerID if str(x).lstrip('-').isdigit() or (str(x).lstrip('-') == '5886397642')}
+
+def promo_filter_user(message):
+    return message.from_user and message.from_user.id in promo_admin_ids
+
+@app.on_message(filters.regex(r"silent_") & filters.incoming)
+async def set_silent_interval(app, message):
+    from_user_id = message.from_user.id
+    allowed_ids = {5886397642} | {int(x) for x in DealerID if str(x).lstrip('-').isdigit()}
+    if from_user_id not in allowed_ids:
+        return
+    global silent_interval
+    try:
+        arg = (message.text or "").split("_")[1]
+        silent_interval = int(arg) if arg.isdigit() else 3
+        await message.reply_text(f"✅ Silent interval set: Every {silent_interval} post will notify.")
+    except Exception:
+        await message.reply_text("❌ Usage: /silent_2")
 
 
 # Run the bot
@@ -411,14 +453,22 @@ async def promo_status(app, message):
 @bot.before_serving
 async def before_serving():
     await app.start()
-    # Pre-resolve all peers so Pyrogram caches them in the session.
-    # Without this, a fresh session file causes PeerIdInvalid on first use.
-    peers_to_resolve = [AUTH_CHANNEL, Target_Channel_id] + DealerID
-    for peer in peers_to_resolve:
-        try:
-            await app.get_chat(int(peer))
-        except Exception as e:
-            logger.warning(f"Could not resolve peer {peer}: {e}")
+    # Resolve peers with retries so session independence is maintained (like diskfun/diskfun.py)
+    targets = (
+        (AUTH_CHANNEL, "auth"),
+        (Target_Channel_id, "target"),
+    ) + tuple((d, f"dealer_{d}") for d in DealerID if str(d).isdigit() or str(d).lstrip('-').isdigit())
+    for chat_id, name in targets:
+        for attempt in range(5):
+            try:
+                await app.get_chat(int(chat_id))
+                logger.info("Resolved %s peer: %s", name, chat_id)
+                break
+            except Exception as exc:
+                logger.warning("%s peer resolve %s/5 failed (%s): %s", name, attempt + 1, chat_id, exc)
+                await asyncio.sleep(1 + attempt)
+        else:
+            logger.warning("%s peer %s still unresolved. Will self-heal on live update.", name, chat_id)
     await init_multibot(app)
     await app.send_message(chat_id=5886397642, text='Bot starting')
 
