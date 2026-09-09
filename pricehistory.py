@@ -124,6 +124,27 @@ forward_on = InlineKeyboardMarkup(
 global forward
 forward = True
 
+# =========================
+# 📢 Promo Control (like divideraff.py)
+# =========================
+promo_enabled = False
+
+PROMO_KEYBOARD = InlineKeyboardMarkup(
+    [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),
+      InlineKeyboardButton("🛍️ ProductsFinder Bot", url="https://t.me/ProductsFinder_Bot")],
+     [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),
+      InlineKeyboardButton("🔔 Join 2.0", url="https://t.me/+mUXCQYrUiKg0NDQ1")]]
+)
+PROMO_FOOTER = "\n\n<b>🛍️ 👉 <a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>Click here to Join All Deals</a></b>"
+
+
+def promo_markup():
+    return PROMO_KEYBOARD if promo_enabled else Promo
+
+
+def promo_footer():
+    return PROMO_FOOTER if promo_enabled else ""
+
 
 @app.on_message(filters.command('forward') & filters.user(5886397642))
 async def forwardtochannel(app, message):
@@ -299,6 +320,7 @@ async def handle_text(app, message):
                 dealer_caption = (
                     f"<b>{inputvalue.replace(extracted_link, f'<a href={affiliate_url}> Buy Now</a>')}</b>"
                     "\n\n<b><a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>🛍️Click To Join for More Loots 👈</a></b>"
+                    + promo_footer()
                 )
                 if forward == True:
                     if combined_image:
@@ -306,10 +328,10 @@ async def handle_text(app, message):
                         combined_image.save(image_bytes, format='JPEG')
                         image_bytes.seek(0)
                         await app.send_photo(chat_id=Target_Channel_id, photo=image_bytes,
-                                             caption=dealer_caption, reply_markup=Promo, disable_notification=True)
+                                             caption=dealer_caption, reply_markup=promo_markup(), disable_notification=True)
                     else:
                         await app.send_message(chat_id=Target_Channel_id, text=dealer_caption,
-                                               reply_markup=Promo, disable_notification=True)
+                                               reply_markup=promo_markup(), disable_notification=True)
                 else:
                     if combined_image:
                         image_bytes = BytesIO()
@@ -353,6 +375,26 @@ async def status_cmd(app, message):
 @app.on_message(filters.private & filters.incoming & filters.command("stats"))
 async def stats_cmd(app, message):
     await handle_stats_command(app, message)
+
+
+################promo on off#################################################################
+@app.on_message(filters.command('promo_on') & filters.user(5886397642))
+async def promo_on(app, message):
+    global promo_enabled
+    promo_enabled = True
+    await message.reply_text("✅ Promo ON — buttons + 'Click here to Join All Deals' added.")
+
+
+@app.on_message(filters.command('promo_off') & filters.user(5886397642))
+async def promo_off(app, message):
+    global promo_enabled
+    promo_enabled = False
+    await message.reply_text("🚫 Promo OFF — buttons and join text removed.")
+
+
+@app.on_message(filters.command('promo_status') & filters.user(5886397642))
+async def promo_status(app, message):
+    await message.reply_text(f"Promo is currently {'ON ✅' if promo_enabled else 'OFF 🚫'}")
 
 
 # Run the bot
