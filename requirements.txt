@@ -17,3 +17,5 @@ Quart
 unshortenit==0.4.0
 python-amazon-paapi>=6.3.0
 python-dotenv==1.0.1
+motor>=3.3.0
+pymongo>=4.5.0

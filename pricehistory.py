@@ -11,6 +11,14 @@ from functions import *
 import os
 from dotenv import load_dotenv
 from ban_manager import is_banned
+from multibot_users import (
+    handle_broadcast_command,
+    handle_cancel_callback,
+    handle_status_command,
+    handle_stats_command,
+    init_multibot,
+    save_user_from_message,
+)
 load_dotenv()
 
 api_id = int(os.getenv("API_ID"))
@@ -58,6 +66,8 @@ async def is_subscribed(bot, query):
 async def start(app, message):
     bot_info = await app.get_me()
     bot_username = bot_info.username
+    if message.chat.type == enums.ChatType.PRIVATE:
+        await save_user_from_message(message)
     if len(message.command) > 1:
         product_id = message.command[1]
         # print(product_id)
@@ -126,6 +136,8 @@ async def forwardtochannel(app, message):
 @app.on_callback_query()
 async def callback_query(app, CallbackQuery):
     global forward
+    if await handle_cancel_callback(app, CallbackQuery):
+        return
     if CallbackQuery.data == 'forward off':
         await CallbackQuery.edit_message_text('Forward to Channel Status turned Off', reply_markup=forward_on)
         forward = False
@@ -156,6 +168,8 @@ async def handle_text(app, message):
     if is_banned(user_id):
         await message.reply("🚫 You are banned from using this bot.")
         return
+    if message.chat.type == enums.ChatType.PRIVATE:
+        await save_user_from_message(message)
     Join = InlineKeyboardMarkup(
         [[InlineKeyboardButton("Join Channel", url="https://t.me/+nHzi25ZLNlE4MjJl")]])
 
@@ -325,6 +339,22 @@ async def handle_text(app, message):
     await message.delete()
 
 
+# Admin: broadcast, status, stats - private only.
+@app.on_message(filters.private & filters.incoming & filters.command("broadcast"))
+async def broadcast_cmd(app, message):
+    await handle_broadcast_command(app, message)
+
+
+@app.on_message(filters.private & filters.incoming & filters.command("status"))
+async def status_cmd(app, message):
+    await handle_status_command(app, message)
+
+
+@app.on_message(filters.private & filters.incoming & filters.command("stats"))
+async def stats_cmd(app, message):
+    await handle_stats_command(app, message)
+
+
 # Run the bot
 
 @bot.before_serving
@@ -338,6 +368,7 @@ async def before_serving():
             await app.get_chat(int(peer))
         except Exception as e:
             logger.warning(f"Could not resolve peer {peer}: {e}")
+    await init_multibot(app)
     await app.send_message(chat_id=5886397642, text='Bot starting')
 
 
