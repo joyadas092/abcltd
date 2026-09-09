@@ -27,9 +27,11 @@ bot_token = os.getenv("BOT_TOKEN")
 
 app = Client("my_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 admin_chat_id = 849188964
-AUTH_CHANNEL = -1003849048564
+auth_channel_env = int(os.getenv("AUTH_CHANNEL", "-1003849048564") or -1003849048564)
+AUTH_CHANNEL = auth_channel_env
+AUTH_CHANNEL_URL = os.getenv("AUTH_CHANNEL_URL", "https://t.me/+nHzi25ZLNlE4MjJl").strip()
 DealerID = ['5886397642', '-1002060929372', '-4247871412']
-Target_Channel_id = -1002038980148
+Target_Channel_id = int(os.getenv("TARGET_CHANNEL_ID", "-1002038980148") or -1002038980148)
 # Define a handler for the /start command
 bot = Quart(__name__)
 logger = logging.getLogger(__name__)
@@ -204,7 +206,7 @@ async def handle_text(app, message):
     if message.chat.type == enums.ChatType.PRIVATE:
         await save_user_from_message(message)
     Join = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("Join Channel", url="https://t.me/+nHzi25ZLNlE4MjJl")]])
+        [[InlineKeyboardButton("Join Channel", url=AUTH_CHANNEL_URL)]])
 
     # Ignore commands (promo, start, broadcast, stats, etc.) and non-product random text
     raw_text = (message.text or message.caption or "").strip()
