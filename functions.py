@@ -7,7 +7,6 @@ from urllib.parse import urlparse, urlunparse, parse_qs
 import re
 import os
 
-from amazon_paapi import get_asin
 from amazon_creatorsapi import AmazonCreatorsApi, Country
 from bs4 import BeautifulSoup
 from unshortenit import UnshortenIt
@@ -91,7 +90,9 @@ def keepa_process(url):
 async def get_product_details(url):
     country_code = extract_country_code(url)
     if country_code == 'in':
-        asin = get_asin(url)
+        # Extract ASIN directly from URL (replaces deprecated amazon_paapi get_asin)
+        product_code_match = re.search(r'/(?:dp|product)/([A-Za-z0-9]{10})', url)
+        asin = product_code_match.group(1) if product_code_match else url.split('/')[-1] if '/' in url else url
         logger.debug(f"[PAAPI] get_items asin={asin} tag={PAAPI_TAG}")
         try:
             product = amazon_in.get_items(asin)[0]
