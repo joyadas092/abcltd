@@ -1,0 +1,5 @@
+D:\python\Telegrambots\Amazon Pricehist\pricehistory.py:512: DeprecationWarning: There is no current event loop
+  loop = asyncio.get_event_loop()
+[2026-09-09 12:05:18 +0530] [22924] [INFO] Running on http://0.0.0.0:8000 (CTRL + C to quit)
+`disable_web_page_preview` is deprecated and will be removed in future updates. Use `link_preview_options` instead.
+`disable_web_page_preview` is deprecated and will be removed in future updates. Use `link_preview_options` instead.

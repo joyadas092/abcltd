@@ -19,7 +19,7 @@ from multibot_users import (
     init_multibot,
     save_user_from_message,
 )
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__) or ".", ".env"))
 
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
@@ -132,10 +132,10 @@ forward = True
 promo_enabled = False
 
 PROMO_KEYBOARD = InlineKeyboardMarkup(
-    [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/Amazon_Pricehistory_Bot"),
-      InlineKeyboardButton("🛍️ ProductsFinder Bot", url="https://t.me/ProductsFinder_Bot")],
-     [InlineKeyboardButton("🎁 Main Channel", url="https://t.me/+HeHY-qoy3vsxYWU1"),
-      InlineKeyboardButton("🔔 Join 2.0", url="https://t.me/+mUXCQYrUiKg0NDQ1")]]
+    [[InlineKeyboardButton("PriceHistory Bot 🤖", url="https://t.me/The_PriceHistory_bot"),
+      InlineKeyboardButton("🛍️ PriceTracker Bot", url="https://t.me/The_PriceTracker_bot")],
+     [InlineKeyboardButton("🎁 ProductsFinder Bot", url="https://t.me/productsfinder_bot"),
+      InlineKeyboardButton("🔔 Join Deals", url="https://t.me/+mUXCQYrUiKg0NDQ1")]]
 )
 PROMO_FOOTER = "\n\n<b>🛍️ 👉 <a href='https://t.me/addlist/zzZb8Deuzy9kZjQ1'>Click here to Join All Deals</a></b>"
 
