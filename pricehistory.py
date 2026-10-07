@@ -35,7 +35,8 @@ Target_Channel_id = int(os.getenv("TARGET_CHANNEL_ID", "-1002038980148") or -100
 
 # ─── Promo deep-link (t.me/amazon_pricehistory_bot?start=promo) ───────────────
 # Channel that holds the promo post you forward to ad users.
-PROMO_SOURCE_CHANNEL = int(os.getenv("PROMO_SOURCE_CHANNEL", "3925843831"))
+# Pyrogram needs the full -100<internal_id> format for channels.
+PROMO_SOURCE_CHANNEL = int(os.getenv("PROMO_SOURCE_CHANNEL", "-1003925843831"))
 # Message ID inside that channel for the promo post.
 PROMO_MESSAGE_ID = int(os.getenv("PROMO_MESSAGE_ID", "11"))
 # ──────────────────────────────────────────────────────────────────────────────
@@ -108,20 +109,7 @@ async def start(app, message):
                 # Fallback: send normal welcome if forward fails
                 await app.send_message(
                     message.chat.id,
-                    f"<b>📊 Know the price before you buy.</b>\n\n"
-                    f"Hey! I am {bot_username} 🤖\n\n"
-                    f"➡️ Send me any valid Amazon.in product link and get its "
-                    f"<b>3-month Price History Graph</b>.\n\n"
-                    f"📉 See when the price was low and decide whether it’s the right time to buy.\n\n"
-                    f"<a href='https://t.me/Loots_Xpert/12'>👉 CLICK HERE TO SEE TUTORIAL 👈</a>\n\n\n"
-                    f"<b>🚀 Explore our other bots:</b>\n\n"
-                    f"• <a href='https://t.me/productsfinder_bot'>@productsfinder_bot</a>\n"
-                    f"🔍 Find products & discover deals.\n\n"
-                    f"• <a href='https://t.me/The_PriceTracker_bot'>@The_PriceTracker_bot</a>\n"
-                    f"🔔 Track prices & get alerts.\n\n"
-                    f"• <a href='https://t.me/The_PriceHistory_bot'>@The_PriceHistory_bot</a>\n"
-                    f"📊 Check product price history.",
-                    # f"<b>Hey! I am {bot_username}.\n\n➡️ Just send me a valid Amazon.in product link. I will share the Price History Graph of the last 3 months😍😍\n\nBuy when the Price is Low📉\n\n<a href='https://t.me/Loots_Xpert/12'>👉 CLICK HERE TO SEE TUTORIAL 👈</a></b>",
+                    f"<b>Hey! I am {bot_username}.\n\n➡️ Just send me a valid Amazon.in product link. I will share the Price History Graph of the last 3 months😍😍\n\nBuy when the Price is Low📉\n\n<a href='https://t.me/Loots_Xpert/12'>👉 CLICK HERE TO SEE TUTORIAL 👈</a></b>",
                     disable_web_page_preview=True,
                 )
             return
@@ -584,6 +572,7 @@ async def before_serving():
     targets = (
         (AUTH_CHANNEL, "auth"),
         (Target_Channel_id, "target"),
+        (PROMO_SOURCE_CHANNEL, "promo_source"),
     ) + tuple((d, f"dealer_{d}") for d in DealerID if str(d).isdigit() or str(d).lstrip('-').isdigit())
     for chat_id, name in targets:
         for attempt in range(5):
