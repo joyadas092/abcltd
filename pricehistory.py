@@ -32,6 +32,14 @@ AUTH_CHANNEL = auth_channel_env
 AUTH_CHANNEL_URL = os.getenv("AUTH_CHANNEL_URL", "https://t.me/+nHzi25ZLNlE4MjJl").strip()
 DealerID = ['5886397642', '-1002060929372', '-4247871412']
 Target_Channel_id = int(os.getenv("TARGET_CHANNEL_ID", "-1002038980148") or -1002038980148)
+
+# ─── Promo deep-link (t.me/amazon_pricehistory_bot?start=promo) ───────────────
+# Channel that holds the promo post you forward to ad users.
+PROMO_SOURCE_CHANNEL = int(os.getenv("PROMO_SOURCE_CHANNEL", "3925843831"))
+# Message ID inside that channel for the promo post.
+PROMO_MESSAGE_ID = int(os.getenv("PROMO_MESSAGE_ID", "11"))
+# ──────────────────────────────────────────────────────────────────────────────
+
 # Define a handler for the /start command
 bot = Quart(__name__)
 logger = logging.getLogger(__name__)
@@ -68,11 +76,59 @@ async def is_subscribed(bot, query):
 async def start(app, message):
     bot_info = await app.get_me()
     bot_username = bot_info.username
+
+    # ── Delete Livegram ad-injected /start messages silently ──────────────────
+    raw_text = message.text or ""
+    if "Livegram" in raw_text or "You cannot forward someone" in raw_text:
+        try:
+            await message.delete()
+            logger.info("[start] Deleted Livegram-injected message from %s", message.from_user.id if message.from_user else "?")
+        except Exception as exc:
+            logger.warning("[start] Could not delete Livegram message: %s", exc)
+        return
+    # ──────────────────────────────────────────────────────────────────────────
+
     if message.chat.type == enums.ChatType.PRIVATE:
         await save_user_from_message(message)
+
     if len(message.command) > 1:
-        product_id = message.command[1]
-        # print(product_id)
+        payload = message.command[1]
+
+        # ── Promo deep-link: t.me/amazon_pricehistory_bot?start=promo ──────────
+        if payload.lower() == "promo":
+            try:
+                await app.forward_messages(
+                    chat_id=message.chat.id,
+                    from_chat_id=PROMO_SOURCE_CHANNEL,
+                    message_ids=PROMO_MESSAGE_ID,
+                )
+                logger.info("[start] Forwarded promo post to %s", message.chat.id)
+            except Exception as exc:
+                logger.warning("[start] Could not forward promo post: %s", exc)
+                # Fallback: send normal welcome if forward fails
+                await app.send_message(
+                    message.chat.id,
+                    f"<b>📊 Know the price before you buy.</b>\n\n"
+                    f"Hey! I am {bot_username} 🤖\n\n"
+                    f"➡️ Send me any valid Amazon.in product link and get its "
+                    f"<b>3-month Price History Graph</b>.\n\n"
+                    f"📉 See when the price was low and decide whether it’s the right time to buy.\n\n"
+                    f"<a href='https://t.me/Loots_Xpert/12'>👉 CLICK HERE TO SEE TUTORIAL 👈</a>\n\n\n"
+                    f"<b>🚀 Explore our other bots:</b>\n\n"
+                    f"• <a href='https://t.me/productsfinder_bot'>@productsfinder_bot</a>\n"
+                    f"🔍 Find products & discover deals.\n\n"
+                    f"• <a href='https://t.me/The_PriceTracker_bot'>@The_PriceTracker_bot</a>\n"
+                    f"🔔 Track prices & get alerts.\n\n"
+                    f"• <a href='https://t.me/The_PriceHistory_bot'>@The_PriceHistory_bot</a>\n"
+                    f"📊 Check product price history.",
+                    # f"<b>Hey! I am {bot_username}.\n\n➡️ Just send me a valid Amazon.in product link. I will share the Price History Graph of the last 3 months😍😍\n\nBuy when the Price is Low📉\n\n<a href='https://t.me/Loots_Xpert/12'>👉 CLICK HERE TO SEE TUTORIAL 👈</a></b>",
+                    disable_web_page_preview=True,
+                )
+            return
+        # ───────────────────────────────────────────────────────────────────────
+
+        # Existing product-ID deep-link (e.g. ?start=B08XYZ)
+        product_id = payload
         await app.send_chat_action(message.chat.id, ChatAction.UPLOAD_PHOTO)
 
         url = f'https://www.amazon.in/dp/{product_id}'
